@@ -1,0 +1,60 @@
+---
+- hosts: projet_serveur2
+  sudo: yes
+  tasks:
+  - name: Install prerequisites
+    apt: name={{item}} update_cache=yes
+    with_items:
+     - apt-transport-https
+     - ca-certificates
+     - curl
+     - software-properties-common
+  - name:    Add Docker GPG key
+    apt_key: url=https://download.docker.com/linux/ubuntu/gpg
+  - name:    Add Docker APT repository
+    apt_repository:
+      repo: deb [arch=amd64] https://download.docker.com/linux/ubuntu {{ansible_distribution_release}} stable
+  - name:    Install Docker
+    apt:     name=docker-ce
+  - name: 'Install pip'
+    apt:
+       name: python-pip
+       state: present
+  - name: 'Install docker-py'
+    pip:
+      name: docker-py
+      state: present
+
+
+#  - name: mkdir tomcat
+#    command: mkdir /home/vagrant/tomcat
+
+  - name: Copie Dockerfile-tomcat
+    copy:
+      src: ./Dockerfile
+      dest: /home/vagrant
+  - name: Copie projetfilrouge.WAR
+    copy:
+      src: ./projetfilrouge.war
+      dest: /home/vagrant
+  - name: Build an image and push it to a private repo
+    docker_image:
+      path: .
+      name: applijava_jee/tomcat
+      tag: 0.1
+      push: no
+  - name: run TOMCAT
+#    command: sudo docker run -d -p 8095:8080 brice/tomcat:0.1
+    docker_container:
+      name: applijava_jee_tomcat
+      image: applijava_jee/tomcat:0.1
+      state: started
+      ports:
+        - "8095:8080"
+       
+
+
+
+
+
+
